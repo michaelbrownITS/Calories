@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Calories">
+<title>Calories</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #ebebea;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #ababA6;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --accent: #1a1a18;
+    --accent-text: #ffffff;
+    --danger: #c0392b;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413;
+      --bg2: #1e1e1c;
+      --bg3: #2a2a28;
+      --text: #f0f0ec;
+      --text2: #9a9a95;
+      --text3: #5a5a57;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --accent: #f0f0ec;
+      --accent-text: #141413;
+      --danger: #e05c4b;
+    }
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    overscroll-behavior: none;
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 env(safe-area-inset-bottom);
+  }
+
+  /* Header */
+  .header {
+    padding: 20px 20px 0;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    padding-top: calc(20px + env(safe-area-inset-top));
+  }
+
+  .date-label {
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 4px;
+  }
+
+  .total-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-bottom: 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .total-num {
+    font-size: 52px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    color: var(--text);
+    line-height: 1;
+    transition: color .2s;
+  }
+
+  .total-unit {
+    font-size: 16px;
+    color: var(--text2);
+  }
+
+  /* Add form */
+  .add-section {
+    padding: 16px 20px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .input-name {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+  }
+
+  .input-name::placeholder { color: var(--text3); }
+  .input-name:focus { border-color: var(--border2); }
+
+  .input-cal {
+    width: 80px;
+    flex-shrink: 0;
+    height: 44px;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 10px;
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    text-align: center;
+  }
+
+  .input-cal::placeholder { color: var(--text3); }
+  .input-cal:focus { border-color: var(--border2); }
+
+  .btn-add {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .15s;
+    line-height: 1;
+  }
+
+  .btn-add:active { opacity: 0.7; }
+
+  /* Log */
+  .log-section {
+    flex: 1;
+    padding: 0 20px;
+    overflow-y: auto;
+  }
+
+  .log-empty {
+    padding: 32px 0;
+    font-size: 14px;
+    color: var(--text3);
+    text-align: center;
+  }
+
+  .log-item {
+    display: flex;
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 0.5px solid var(--border);
+    gap: 10px;
+    animation: fadeIn .18s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+  .log-name {
+    flex: 1;
+    font-size: 15px;
+    color: var(--text);
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .log-kcal {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 48px;
+    text-align: right;
+  }
+
+  .btn-del {
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 18px;
+    padding: 4px;
+    cursor: pointer;
+    line-height: 1;
+    transition: color .15s;
+  }
+
+  .btn-del:active { color: var(--danger); }
+
+  /* References */
+  .refs-section {
+    padding: 0 20px 20px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 16px 0 10px;
+  }
+
+  .refs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .ref-btn {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: background .12s;
+  }
+
+  .ref-btn:active { background: var(--bg3); }
+
+  .ref-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .ref-detail {
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  /* Bottom bar */
+  .bottom-bar {
+    padding: 12px 20px;
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-clear {
+    background: none;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+  }
+
+  .btn-clear:active { color: var(--danger); border-color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="date-label" id="date-label"></div>
+    <div class="total-row">
+      <span class="total-num" id="total">0</span>
+      <span class="total-unit">kcal</span>
+    </div>
+  </div>
+
+  <div class="add-section">
+    <div class="input-row">
+      <input class="input-name" id="food-name" type="text" placeholder="Food / meal (optional)" autocomplete="off" autocorrect="off" spellcheck="false" />
+      <input class="input-cal" id="cal-input" type="number" placeholder="kcal" min="1" inputmode="numeric" />
+      <button class="btn-add" onclick="addEntry()" aria-label="Add">+</button>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div id="log-list"></div>
+  </div>
+
+  <div class="refs-section">
+    <div class="section-label">Quick add</div>
+    <div class="refs-grid" id="refs-grid"></div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn-clear" onclick="clearAll()">Clear all</button>
+  </div>
+
+</div>
+
+<script>
+const REFS = [
+  {name:"Condensed milk", g:30, kcal:99},
+  {name:"Peanut butter", g:26, kcal:156},
+  {name:"White rice (cooked)", g:107, kcal:139},
+  {name:"Chicken breast", g:100, kcal:165},
+  {name:"Butter", g:20, kcal:160},
+  {name:"Olive oil", g:20, kcal:170},
+  {name:"Cheddar cheese", g:20, kcal:80},
+  {name:"Milk", g:150, kcal:71},
+  {name:"Milo", g:27, kcal:109}
+];
+
+let log = [];
+
+function todayStr() {
+  return new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+}
+
+function render() {
+  document.getElementById('date-label').textContent = todayStr();
+  const total = log.reduce((s,e) => s + e.kcal, 0);
+  document.getElementById('total').textContent = total;
+
+  const list = document.getElementById('log-list');
+  if (log.length === 0) {
+    list.innerHTML = '<div class="log-empty">Nothing logged yet</div>';
+    return;
+  }
+  list.innerHTML = log.map((e, i) => `
+    <div class="log-item">
+      <span class="log-name">${e.name || '—'}</span>
+      <span class="log-kcal">${e.kcal}</span>
+      <button class="btn-del" onclick="del(${i})" aria-label="Remove">✕</button>
+    </div>
+  `).join('');
+}
+
+function addEntry() {
+  const nameEl = document.getElementById('food-name');
+  const calEl = document.getElementById('cal-input');
+  const kcal = parseInt(calEl.value);
+  if (!kcal || kcal <= 0) { calEl.focus(); return; }
+  log.unshift({name: nameEl.value.trim(), kcal});
+  nameEl.value = '';
+  calEl.value = '';
+  calEl.focus();
+  render();
+}
+
+function del(i) { log.splice(i, 1); render(); }
+
+function clearAll() {
+  if (log.length && confirm('Clear all entries for today?')) { log = []; render(); }
+}
+
+document.getElementById('cal-input').addEventListener('keydown', e => { if (e.key === 'Enter') addEntry(); });
+document.getElementById('food-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('cal-input').focus(); });
+
+const grid = document.getElementById('refs-grid');
+REFS.forEach(r => {
+  const b = document.createElement('button');
+  b.className = 'ref-btn';
+  b.innerHTML = `<span class="ref-name">${r.name}</span><span class="ref-detail">${r.g}g · ${r.kcal} kcal</span>`;
+  b.onclick = () => {
+    document.getElementById('food-name').value = r.name;
+    document.getElementById('cal-input').value = r.kcal;
+    document.getElementById('cal-input').focus();
+  };
+  grid.appendChild(b);
+});
+
+render();
+</script>
+</body>
+</html>
